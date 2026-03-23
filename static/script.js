@@ -73,7 +73,6 @@ async function login() {
         const data = await res.json();
 
         if (data.success) {
-            localStorage.setItem("ds_logged", "true");
             window.location.href = "/";
         } else {
             shakeError(data.message);

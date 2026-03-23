@@ -4,9 +4,51 @@
 <meta charset="UTF-8">
 <title>DeepScan AI | Forensic Hub</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<style>
+    /* New Nav Layout */
+    .top-nav {
+        position: relative; /* Allows absolute positioning for center element */
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 18px 32px;
+    }
+    .nav-center {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        white-space: nowrap;
+    }
+    .history-preview-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.6;
+        transition: 0.3s;
+    }
+    .history-item:hover .history-preview-img {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+    .history-item {
+        position: relative;
+        overflow: hidden;
+    }
+    .mini-badge {
+        position: absolute;
+        bottom: 8px;
+        right: 8px;
+        font-size: 0.7rem;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-weight: 800;
+        z-index: 2;
+    }
+    .badge-fake { background: rgba(255,0,0,0.8); color: white; }
+    .badge-real { background: rgba(0,255,163,0.8); color: black; }
+</style>
 </head>
 
 <body>
@@ -14,40 +56,43 @@
 <nav class="top-nav">
     <div class="brand animated-brand">
         <span class="brand-main">DeepScan</span><span class="brand-dot">.AI</span>
-        <div class="brand-sub">Unified Neural Integrity Suite</div>
     </div>
 
-    <div class="auth-zone">
-        <span class="badge animated-mode" id="session-status">Guest Mode</span>
-        <button class="login-btn" id="auth-trigger">Login</button>
+    <div class="nav-center">
+        {% if current_user.is_authenticated %}
+            <div class="user-greeting">
+                Welcome, <span class="user-name-highlight">{{ current_user.name }}</span>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="nav-right" style="display:flex; align-items:center; gap:15px;">
+        {% if current_user.is_authenticated %}
+            <a href="{{ url_for('history') }}" class="history-link-btn">View History</a>
+            <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+        {% else %}
+            <span class="badge animated-mode" id="session-status">Guest Mode</span>
+            <a href="{{ url_for('login') }}" class="login-btn">Login</a>
+        {% endif %}
     </div>
 </nav>
 
 <main class="dashboard-wrapper">
 
     <span class="status-subtext animated-status" id="main-status">
-        Guest Mode Active
+        {% if current_user.is_authenticated %}
+            System Ready: Awaiting Target Image
+        {% else %}
+            Guest Mode Active (Login to auto-save results)
+        {% endif %}
     </span>
 
     <div class="bento-grid">
-
-        <!-- SCANNER -->
-        <section class="bento-tile compact scanner-tile drop-zone"
-            id="upload-container"
-            tabindex="0"
-            role="button"
-            aria-label="Upload Image Area">
-
+        <section class="bento-tile compact scanner-tile drop-zone" id="upload-container">
             <h3>Scanner Unit</h3>
-
             <input type="file" id="file-input" hidden accept="image/*">
+            <p class="drop-text">Upload Target<br><span>Click or Drag Image to Scan</span></p>
 
-            <p class="drop-text">
-                Upload Target<br>
-                <span>Click or Drag Image to Scan</span>
-            </p>
-
-            <!-- SCAN PROGRESS TIMELINE -->
             <ul class="scan-timeline hidden" id="scan-timeline">
                 <li class="active">Extracting image features</li>
                 <li>Analyzing pixel consistency</li>
@@ -56,27 +101,20 @@
             </ul>
 
             <div class="scan-actions hidden" id="scan-actions">
-                <button class="scan-btn save" data-action="save">💾 Save</button>
-                <button class="scan-btn confirm" data-action="confirm">✔ Confirm</button>
-                <button class="scan-btn back" data-action="back">← Back</button>
+                <button class="scan-btn back" data-action="back">Scan Another</button>
             </div>
         </section>
 
-        <!-- SIDE -->
         <div class="side-column">
-
             <section class="bento-tile compact score-tile">
                 <h3>Metrics Card</h3>
                 <small class="muted">Authenticity Score</small>
-
                 <div class="gauge-wrapper">
                     <svg viewBox="0 0 100 50">
                         <path class="gauge-bg" d="M10,45 A35,35 0 0,1 90,45"/>
                         <path id="gauge-progress" class="gauge-fill" d="M10,45 A35,35 0 0,1 90,45"/>
                     </svg>
-                    <div class="gauge-label">
-                        <span id="gauge-percent">0</span>%
-                    </div>
+                    <div class="gauge-label"><span id="gauge-percent">0</span>%</div>
                 </div>
             </section>
 
@@ -87,25 +125,40 @@
         </div>
     </div>
 
-    <!-- HISTORY -->
     <section class="bento-tile compact history-tile">
-        <h3>Scan History <span id="history-lock">🔒</span></h3>
+        <h3 style="display:flex; justify-content:space-between; align-items: center;">
+            Recent Scans
+            {% if current_user.is_authenticated %}
+                <a href="{{ url_for('history') }}" style="font-size: 0.8rem; color: var(--accent); text-decoration: none; font-weight: 600;">View Full History &rarr;</a>
+            {% else %}
+                <span id="history-lock" title="Login required">🔒</span>
+            {% endif %}
+        </h3>
+        
         <div class="history-grid" id="history-container">
-            <div class="history-item placeholder"></div>
-            <div class="history-item placeholder"></div>
-            <div class="history-item placeholder"></div>
-            <div class="history-item placeholder"></div>
+            {% if current_user.is_authenticated and recent_scans %}
+                {% for scan in recent_scans %}
+                    <div class="history-item">
+                        <img src="{{ url_for('static', filename='uploads/' ~ scan.image_path) }}" class="history-preview-img">
+                        <span class="mini-badge {% if scan.verdict == 'Artificial' %}badge-fake{% else %}badge-real{% endif %}">
+                            {{ scan.verdict }}
+                        </span>
+                    </div>
+                {% endfor %}
+                {% for i in range(4 - recent_scans|length) %}
+                    <div class="history-item placeholder"></div>
+                {% endfor %}
+            {% else %}
+                <div class="history-item placeholder"></div>
+                <div class="history-item placeholder"></div>
+                <div class="history-item placeholder"></div>
+                <div class="history-item placeholder"></div>
+            {% endif %}
         </div>
     </section>
 
 </main>
 
 <script src="{{ url_for('static', filename='script.js') }}"></script>
-<script>
-document.getElementById("auth-trigger").onclick = () => {
-    window.location.href = "/login";
-};
-</script>
-
 </body>
 </html>

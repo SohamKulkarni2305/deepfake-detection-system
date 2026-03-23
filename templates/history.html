@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DeepScan AI | Scan Archives</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* Specific layouts for the history grid */
+        .history-page-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 24px;
+            margin-top: 40px;
+        }
+        
+        .scan-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 20px;
+            backdrop-filter: blur(16px);
+            transition: 0.3s;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .scan-card:hover {
+            box-shadow: 0 0 25px rgba(0, 242, 255, 0.15);
+            border-color: rgba(0, 242, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .scan-card img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .scan-meta {
+            font-size: 0.8rem;
+            color: #888;
+            letter-spacing: 0.5px;
+        }
+
+        .scan-verdict {
+            font-weight: 800;
+            font-size: 1.1rem;
+        }
+
+        .verdict-authentic { color: var(--success); }
+        .verdict-artificial { 
+            color: var(--danger); 
+            text-shadow: 0 0 10px rgba(255,77,77,0.4); 
+        }
+
+        .scan-explanation {
+            font-size: 0.85rem;
+            opacity: 0.85;
+            line-height: 1.5;
+            flex-grow: 1; /* Pushes the delete button to the very bottom */
+            background: rgba(0,0,0,0.2);
+            padding: 12px;
+            border-radius: 10px;
+        }
+
+        .delete-btn-full {
+            background: transparent;
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            padding: 10px 0;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+            width: 100%;
+            margin-top: auto;
+        }
+
+        .delete-btn-full:hover {
+            background: var(--danger);
+            color: #000;
+            box-shadow: 0 0 15px rgba(255, 77, 77, 0.4);
+        }
+        
+        /* Empty State Styling */
+        .empty-state {
+            text-align: center;
+            margin-top: 60px;
+            padding: 60px 20px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 24px;
+            border: 1px dashed var(--border);
+        }
+    </style>
+</head>
+<body class="auth-page" style="display: block; min-height: 100vh;">
+
+    <nav class="top-nav" style="position: relative; display: flex; justify-content: space-between; align-items: center; padding: 18px 32px;">
+        <div class="brand animated-brand">
+            <span class="brand-main">DeepScan</span><span class="brand-dot">.AI</span>
+            <div class="brand-sub">Forensic Archives</div>
+        </div>
+        
+        <div style="position: absolute; left: 50%; transform: translateX(-50%);">
+            <h2 style="margin:0; font-size:1.2rem; font-weight:600; color: #fff; letter-spacing: 0.5px;">
+                Your Scan History
+            </h2>
+        </div>
+
+        <div class="nav-right">
+            <a href="{{ url_for('index') }}" class="history-link-btn" style="border-color: var(--accent);">
+                &larr; Back to Dashboard
+            </a>
+        </div>
+    </nav>
+
+    <main class="dashboard-wrapper">
+        {% if scans %}
+            <div class="history-page-grid">
+                {% for scan in scans %}
+                    <div class="scan-card">
+                        <img src="{{ url_for('static', filename='uploads/' ~ scan.image_path) }}" alt="Scanned Image">
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="scan-meta">
+                                {{ (scan.timestamp + timedelta(hours=5, minutes=30)).strftime("%d %b %Y | %I:%M %p") }}
+                            </span>
+                            <span class="scan-verdict {% if scan.verdict == 'Authentic' %}verdict-authentic{% else %}verdict-artificial{% endif %}">
+                                {{ scan.result_score }} {{ scan.verdict }}
+                            </span>
+                        </div>
+                        
+                        <div class="scan-explanation">
+                            {{ scan.explanation }}
+                        </div>
+
+                        <form action="{{ url_for('delete_scan', scan_id=scan.id) }}" method="POST" style="margin: 0;">
+                            <button type="submit" class="delete-btn-full" onclick="return confirm('Erase this record from the forensic archive?')">Delete Record</button>
+                        </form>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div style="font-size: 3.5rem; margin-bottom: 15px; opacity: 0.4;">📭</div>
+                <h3 style="color: #fff; font-size: 1.5rem; margin-bottom: 8px;">Archive Empty</h3>
+                <p style="color: #888; margin-bottom: 24px;">You haven't saved any forensic scans yet.</p>
+                <a href="{{ url_for('index') }}" class="login-btn" style="text-decoration:none; padding: 10px 24px;">Scan an Image</a>
+            </div>
+        {% endif %}
+    </main>
+
+</body>
+</html>

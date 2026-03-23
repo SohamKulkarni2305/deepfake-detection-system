@@ -221,10 +221,13 @@ body {
 }
 
 .scanner-preview img {
-    width:100%;
-    display:block;
-    border-radius:14px;
-    filter:saturate(1.1) contrast(1.05);
+    width: 100%;
+    max-height: 280px; /* Forces the image to stay a reasonable height */
+    object-fit: contain; /* Ensures the whole image is visible without stretching */
+    display: block;
+    border-radius: 14px;
+    filter: saturate(1.1) contrast(1.05);
+    background: rgba(0, 0, 0, 0.4); /* Adds a nice dark backdrop if the image is narrow */
 }
 
 .scanner-preview::after {
@@ -543,3 +546,55 @@ body.auth-page {
 
 /* ================= UTIL ================= */
 .hidden { display:none !important; }
+
+/* ================= LOGGED IN NAV STYLES ================= */
+.user-greeting {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+.user-name-highlight {
+    color: var(--accent);
+    text-shadow: 0 0 12px var(--accent-glow);
+    letter-spacing: 0.5px;
+}
+
+.history-link-btn {
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 8px 16px;
+    border: 1px solid rgba(0, 242, 255, 0.3);
+    border-radius: 8px;
+    transition: 0.3s;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.history-link-btn:hover {
+    background: rgba(0, 242, 255, 0.1);
+    border-color: var(--accent);
+    box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
+}
+
+.logout-btn {
+    color: var(--danger);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 8px 16px;
+    border: 1px solid var(--danger);
+    border-radius: 8px;
+    transition: 0.3s;
+    background: transparent;
+}
+
+.logout-btn:hover {
+    background: var(--danger);
+    color: #000;
+    box-shadow: 0 0 15px rgba(255, 77, 77, 0.5);
+}
