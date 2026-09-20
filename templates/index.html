@@ -7,9 +7,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 <style>
-    /* New Nav Layout */
     .top-nav {
-        position: relative; /* Allows absolute positioning for center element */
+        position: relative; 
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -63,9 +62,12 @@
             <div class="user-greeting">
                 Welcome, <span class="user-name-highlight">{{ current_user.name }}</span>
             </div>
+        {% else %}
+            <div class="user-greeting">
+                Welcome to <span class="user-name-highlight">DeepScan.AI</span>
+            </div>
         {% endif %}
     </div>
-
     <div class="nav-right" style="display:flex; align-items:center; gap:15px;">
         {% if current_user.is_authenticated %}
             <a href="{{ url_for('history') }}" class="history-link-btn">View History</a>
